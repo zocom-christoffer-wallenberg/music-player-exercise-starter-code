@@ -17,7 +17,9 @@
 */
 
 const audio = document.getElementById('audio-player');
-//const queryInput = 
+const queryInput = document.getElementById('query');
+const searchButton = document.getElementById('search-button');
+
 let token = '';
 
 function playSong(song) {
@@ -31,11 +33,11 @@ async function getToken() {
     const data = await response.json();
     token = data.token;
     console.log(token);
-    getSongs();
 }
+
 //https://api.spotify.com/v1/search?q=spirit%20of%20the%20season&type=track
-async function getSongs() {
-    const response = await fetch('https://api.spotify.com/v1/search?q=spirit%20of%20the%20season'+
+async function getSongs(query) {
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${query}`+
     '&type=track', {
         headers: {
             'authorization': 'Bearer ' + token
@@ -46,6 +48,9 @@ async function getSongs() {
     playSong(data.tracks.items[0])
 }
 
-
+searchButton.addEventListener('click', () => {
+    const query = queryInput.value;
+    getSongs(query);
+});
 
 getToken();
