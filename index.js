@@ -19,13 +19,19 @@
 const audio = document.getElementById('audio-player');
 const queryInput = document.getElementById('query');
 const searchButton = document.getElementById('search-button');
+const songsWrapper = document.getElementById('songs');
+const playBtn = document.querySelector('#play');
+const pauseBtn = document.querySelector('#pause');
+const backwardBtn = document.querySelector('#backward');
+const forwardBtn = document.querySelector('#forward');
+const progressBar = document.querySelector('#progressBar');
 
+//HÄMTA MUSIK OCH VISA
 let token = '';
 
-function playSong(song) {
+function playSong(url) {
     console.log('Selected song: ', song);
-    audio.src = song.preview_url;
-    //audio.play();
+    audio.src = url;
 }
 
 async function getToken() {
@@ -33,6 +39,31 @@ async function getToken() {
     const data = await response.json();
     token = data.token;
     console.log(token);
+}
+
+//Lista alla låtar på webbsidan
+
+function displaySongs(songs) {
+    songsWrapper.innerHTML = '';
+
+    for(song of songs) {
+        console.log(song);
+        const songElem = document.createElement('p');
+        songElem.innerHTML = 'Låt: ' + song.name + ' Artist: ' + song.artists[0].name;
+        songElem.setAttribute('url', song.preview_url);
+        console.log(songElem);
+        songsWrapper.append(songElem); //Lägg till den skapade p-taggen i article med id songs
+
+        //Lägg till en addEventListener på varje p-tagg och när man klickar på den hämta url:en från p-taggen
+        songElem.addEventListener('click', (event) => {
+            console.log('Du klickade på: ', event.target);
+            console.log(event.target.getAttribute('url'));
+            const preview_url = event.target.getAttribute('url');
+            if (preview_url !== 'null') {
+                playSong(preview_url);
+            }
+        });
+    }
 }
 
 //https://api.spotify.com/v1/search?q=spirit%20of%20the%20season&type=track
@@ -45,7 +76,7 @@ async function getSongs(query) {
     });
     const data = await response.json();
     console.log(data);
-    playSong(data.tracks.items[0])
+    displaySongs(data.tracks.items);
 }
 
 searchButton.addEventListener('click', () => {
@@ -54,3 +85,39 @@ searchButton.addEventListener('click', () => {
 });
 
 getToken();
+
+
+//MUSIKSPELAREN
+function togglePlayAndPause() {
+    playBtn.classList.toggle('hide');
+    pauseBtn.classList.toggle('hide');
+}
+
+playBtn.addEventListener('click', () => {
+    audio.play();
+
+    togglePlayAndPause();
+});
+
+pauseBtn.addEventListener('click', () => {
+    audio.pause();
+    togglePlayAndPause();
+});
+
+forwardBtn.addEventListener('click', () => {
+    if (!audio.paused) {
+        audio.currentTime = parseInt(audio.currentTime + 10);
+    }
+});
+
+backwardBtn.addEventListener('click', () => {
+    if (!audio.paused) {
+        audio.currentTime = parseInt(audio.currentTime - 10);
+    }
+});
+
+audio.addEventListener('timeupdate', () => {
+    //Din funktion körs varje sekund och räknar ut hur långt i procent vi har kommit i låten
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progressBar.style.width = `${percent}%`;
+});
